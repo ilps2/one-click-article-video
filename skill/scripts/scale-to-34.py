@@ -47,10 +47,17 @@ def scale_vertical_css(out):
 
 
 def scale_heights(out):
-    """高度 >100px 的元素(图形/卡片)压缩。"""
-    return re.sub(r'height: (\d+)px;',
-                  lambda m: f'height: {max(1, round(int(m.group(1))*HEIGHT_FACTOR))}px;'
-                  if int(m.group(1)) > 100 else m.group(0), out)
+    """height >100px 的元素压缩。规则:宽高相等的图形(圆形/方形)宽高一起缩,防椭圆变形;
+    横向元素(宽≠高)不动。"""
+    def fix_block(m):
+        block = m.group(0)
+        h = re.search(r'height: (\d+)px', block)
+        w = re.search(r'width: (\d+)px', block)
+        if h and w and int(h.group(1)) > 100 and int(w.group(1)) == int(h.group(1)):
+            s = max(1, round(int(h.group(1)) * HEIGHT_FACTOR))
+            return block.replace(h.group(0), f'height: {s}px').replace(w.group(0), f'width: {s}px')
+        return block
+    return re.sub(r'[^{}]+\{[^}]*\}', fix_block, out)
 
 
 def shrink_selectors(out, specs, kind):
