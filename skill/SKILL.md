@@ -108,6 +108,7 @@ HYPERFRAMES_SKIP_SKILLS=1 npx hyperframes init <name> --example blank --resoluti
 
 - 复制 `references/cover-template.html` 为模板,替换钩子文字、意象元素、配色
 - 平台规格:抖音 1080×1920(9:16)、小红书 1080×1440(3:4)、微信视频号 1080×1080(1:1);同一设计系统三份竖版排版
+- **公众号封面(横条 900×383)的左 1:1 裁剪机制**:微信转发卡片图 = 封面横条**左侧 383×383 区域直接裁剪**(无独立设置)。因此横条设计必须:左侧 1:1 区内放**完整主题**(印章+主标题,独立表达),补充卖点(数字/副文案)放右侧裁剪区外;设计后用 `ffmpeg crop=766:766:0:0`(2x)验证 1:1 区内主题完整、裁剪边界无半截元素
 - 导出 PNG(headless Chrome 2x,无需点 html2canvas 按钮):
   ```bash
   CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
