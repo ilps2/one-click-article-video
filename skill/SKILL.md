@@ -80,6 +80,7 @@ HYPERFRAMES_SKIP_SKILLS=1 npx hyperframes init <name> --example blank --resoluti
 - 竖屏项目(root 1080×1920),**每个平台比例一个 composition 文件**:`index.html`(9:16,抖音+微信通用)+ `compositions/redbook-34.html`(3:4 小红书,1080×1440)
 - **3:4 生成规则(宽度保持 + 高度压缩,禁止等比 ×0.75)**:3:4 与 9:16 宽度相同(1080),等比缩小会让内容变小、观感像裁切。正确做法:字号/卡片宽度/水平间距**保持**,垂直尺寸压缩(margin/padding 上下 ×0.72,height>100px 的元素 ×0.78),大图形(印章/器物)额外缩到 ~85%,长标题字号微调避免换行。直接运行 `python3 scripts/scale-to-34.py index.html -o compositions/redbook-34.html --shrink "#seal,0.85" --font-shrink "#s1-title-1,0.85"`。生成后必须抽帧验证:垂直居中(内容中心 ≈ 屏中 720)、顶底无裁切、字号与 9:16 一致
 - 布局铁律:内容**纵向排列**(圆点+文字横排一行、向下箭头串联步骤);每幕内容包一个 wrap(`.scene > div` 必须 `display:flex; flex-direction:column; align-items:center; width:100%`,否则窄子元素靠左)
+- **单行元素自适应缩字**(防"一行多一个字"难看换行):所有设计为单行的标题/文案元素加 `class="nowrap"`(`white-space:nowrap`),页面加载时跑 fitLines() 测量 `scrollWidth > clientWidth` 则按比例缩小字号(×0.99 留余量)。固定字号 × 字数刚好超出容器 1 个字是最常见的翻车点(如「不支持视频生成的 LLM,」13 字×72px=936>900)。封面 HTML 同样注入(headless Chrome 会执行 JS)
 - 动画:单个 `gsap.timeline({paused:true})` 注册到 `window.__timelines["main"]`;**连续修改同一属性(如换肤轮播的 backgroundColor)必须用 `fromTo` 显式起止色**,否则 tween 起始值在创建时被捕获,播放会闪回初始值
 - 场景切换:clip 内 wrap 做 opacity fade,在 clip 边界加 `tl.set(wrap, {opacity:0}, <boundary>)` hard kill(不满足会报 `gsap_exit_missing_hard_kill`)
 - 字体:`@font-face { font-family:"PingFang SC"; src:local("PingFang SC"); }` 等声明,否则渲染器 fallback 字体
