@@ -80,16 +80,19 @@ HYPERFRAMES_SKIP_SKILLS=1 npx hyperframes init <name> --example blank --resoluti
 - 竖屏项目(root 1080×1920),**每个平台比例一个 composition 文件**:`index.html`(9:16,抖音+微信通用)+ `compositions/redbook-34.html`(3:4 小红书,1080×1440)
 - **3:4 生成规则(宽度保持 + 高度压缩,禁止等比 ×0.75)**:3:4 与 9:16 宽度相同(1080),等比缩小会让内容变小、观感像裁切。正确做法:字号/卡片宽度/水平间距**保持**,垂直尺寸压缩(margin/padding 上下 ×0.72,height>100px 的元素 ×0.78),大图形(印章/器物)额外缩到 ~85%,长标题字号微调避免换行。直接运行 `python3 scripts/scale-to-34.py index.html -o compositions/redbook-34.html --shrink "#seal,0.85" --font-shrink "#s1-title-1,0.85"`。生成后必须抽帧验证:垂直居中(内容中心 ≈ 屏中 720)、顶底无裁切、字号与 9:16 一致
 - 布局铁律:内容**纵向排列**(圆点+文字横排一行、向下箭头串联步骤);每幕内容包一个 wrap(`.scene > div` 必须 `display:flex; flex-direction:column; align-items:center; width:100%`,否则窄子元素靠左)
-- **单行元素自适应缩字**(防"一行多一个字"难看换行):所有设计为单行的标题/文案元素加 `class="nowrap"`(`white-space:nowrap`),页面加载时跑 fitLines() 测量 `scrollWidth > 父容器宽` 则按比例缩小字号(×0.99 留余量)。**关键坑:inline 元素没有容器宽度概念(clientWidth=内容宽,永不触发),fit 前必须把 display 改成 inline-block,上限用 `parentElement.clientWidth`**。固定字号 × 字数刚好超出容器 1 个字是最常见的翻车点(如「不支持视频生成的 LLM,」13 字×72px=936>900)。封面 HTML 同样注入(headless Chrome 会执行 JS)。fitLines 参考实现:
+- **单行元素自适应缩字**(防"一行多一个字"难看换行):所有设计为单行的标题/文案元素加 `class="nowrap"`(`white-space:nowrap`)。**两个关键坑**:① inline 元素没有容器宽度概念,fit 前先 `display:inline-block`;② **不要用 scrollWidth 测量**(渲染器与本地浏览器字体度量不同,测量结果漂移,同一页面本地 102px、渲染器 62px)——用**字符计算法**:中文全宽字宽=字号,半宽字符(数字/字母/空格/标点)≈0.55×字号,`w = 全宽字数×fs + 半宽字数×fs×0.55`,超宽则 `fs = 容器宽/(全宽+半宽×0.55)×0.99`。**检查每个单行元素都真的有 nowrap class**(漏加=完全不参与 fit,常见坑:s1-title-2/s1-sub 因原始 HTML 无 class 而漏网)。fitLines 参考实现:
   ```js
   function fitLines() {
     document.querySelectorAll('.nowrap').forEach(function (el) {
       if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
       var maxW = el.parentElement ? el.parentElement.clientWidth - 4 : 0;
-      if (maxW > 0 && el.scrollWidth > maxW) {
-        var ratio = maxW / el.scrollWidth;
-        var fs = parseFloat(getComputedStyle(el).fontSize);
-        el.style.fontSize = Math.floor(fs * ratio * 0.99) + 'px';
+      var fs = parseFloat(getComputedStyle(el).fontSize);
+      var text = el.textContent;
+      var full = (text.match(/[\u4e00-\u9fff\u3000-\u303f]/g) || []).length;
+      var half = text.length - full;
+      var w = full * fs + half * fs * 0.55;
+      if (maxW > 0 && w > maxW) {
+        el.style.fontSize = Math.floor(maxW / (full + half * 0.55) * 0.99) + 'px';
       }
     });
   }
