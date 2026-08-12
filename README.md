@@ -151,6 +151,8 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p
 | 《张雪峰的替身—烧烤摊主替张过人间烟火日子》 | 深夜烟火风 | 公众号 10w+,完整 2 视频 + 4 封面 |
 | 《马斯克:如果今天破产,我绝不会去找工作…》 | 财富琥珀金风 | 公众号 10w+,完整 2 视频 + 4 封面 |
 
+**🎬 案例成品视频(真实渲染输出)**:[GitHub Release v0.1.0](https://github.com/ilps2/one-click-article-video/releases/tag/v0.1.0) — 每篇含 9:16 视频(抖音/微信)、3:4 视频(小红书)、抖音封面,直接下载看效果。
+
 ## 🛠 常见问题
 
 **Q: 公众号文章抓取失败/遇到验证页?**
