@@ -152,6 +152,12 @@ mkdir -p "$DEST" && cp *.mp4 *.png "$DEST/" && open "$DEST"
 
 **执行**:每单交付前,对 `发布文案.md` + 封面钩子 + 视频关键帧文字做一次扫描,列出替换记录并在交付说明中标注「已过审核适配」。
 
+### 10. 投放(微信侧优先)
+
+微信视频号是官方流量倾斜方向,且公众号↔视频号双向打通。交付时附 `references/publishing-sop.md`(投放 SOP:绑定公众号 → 视频挂文章链接 → 文章插视频号视频 → 冷启动节奏 → 数据验证,按钮级操作)。投放优先级:微信视频号 > 小红书(图文+视频组合)> 抖音(纯算法竞争)。
+
+**实测案例(抖音站外引导弱化)**:抖音正文里的「已开源 GitHub:one-click-article-video」虽无链接(仅搜索引导),仍建议改为「已开源,仓库名评论区见」——抖音对站外平台引导整体偏严,把仓库名放评论区传递(评论区是用户生成内容,审核尺度不同)。小红书对 GitHub 提及宽松(程序员内容常见),可保留原文。
+
 ## 成本模型(DeepSeek 价:in ¥1/百万,out ¥2/百万,缓存 ¥0.02/百万)
 
 | 环节 | 输入 tokens | 输出 tokens |
@@ -178,6 +184,7 @@ mkdir -p "$DEST" && cp *.mp4 *.png "$DEST/" && open "$DEST"
 1. **ffmpeg 采样 bug**:`-ss <t> -i f.mp4` 不加 `-vframes 1` 会输出 t 之后**所有帧**,统计的是平均值——曾因此误判"换肤动画丢失",实际视频是好的。另:缩略图(如 `scale=108:192`)会双线性淡化小字笔画,亮像素统计可能 0% 误判"内容缺失"——验证在**原分辨率**做,或辅以抽帧 PNG 文件大小对比(有内容 ≈ 180KB+,空/纯色 ≈ 10KB)
 1b. **抽帧验证必须避开动画进行中的时间点**:入场动画(如列表 stagger 从 26.2s 开始)期间元素还是 opacity 0,此时抽帧会误判"内容被裁切/缺失"。验证选**动画完成后的时间点**(如 stagger 结束后 +0.5s),或用行分布检测确认内容边界没触到画布边缘(顶/底裁切 = 内容行到达 y<20 或 y>H-20)
 1c. **浅色卡片检测盲区**:卡片 `#FAF9F5` 与月牙白底 `#F6F4EF` 色差 <30,按"非底色"行检测会漏掉卡片区域,误判"内容偏上"。验证内容分布时给浅色元素单独阈值,或直接抽 PNG 目视确认
+1d. **2x PNG 像素检测必须先取真实尺寸**:headless Chrome 导出的是 2x(如横条 900×383 → PNG 1800×766),若代码按逻辑尺寸(900×383)读 raw 像素,索引错乱,行检测结果全是错的(曾把正常布局误判成"内容偏下")。检测 PNG 前先 `sips -g pixelWidth -g pixelHeight` 或 ffprobe 拿真实宽高
 2. **GSAP 连续同属性 tween**:起始值在页面加载时捕获。`to()` 连写两个 backgroundColor tween,第二个会从初始色渐变(闪回)。必须 `fromTo(prevColor, nextColor)`
 3. **hard kill**:clip 内 wrap 的 exit fade 必须在 clip 边界 `tl.set(..., 边界时间)` 补硬切,否则 lint 报 `gsap_exit_missing_hard_kill`
 4. **wrap 居中(水平+垂直)**:`.scene > div` 必须 `display:flex; flex-direction:column; align-items:center; width:100%`,否则窄子元素靠左。**垂直居中必须再加 `flex:1`**(否则 wrap 高度=内容高度,`justify-content:center` 无效,内容堆在顶部、下半屏空白——竖屏视频最常见的"内容偏上"问题)
@@ -201,4 +208,3 @@ mkdir -p "$DEST" && cp *.mp4 *.png "$DEST/" && open "$DEST"
 - [ ] **发布前合规扫描:文案+封面+画面文字过一遍敏感词替换表,标注替换记录**
 - [ ] 全部产物归档到 `~/Downloads/Agent/Hermes/<日期>/<主题>/`
 - [ ] 交付附成本报表(输入/输出 tokens × 单价 ≈¥0.05)
-- [ ] 全部产物归档到 `~/Downloads/Agent/Hermes/<日期>/<主题>/`
