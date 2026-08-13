@@ -98,10 +98,20 @@ npx --yes hyperframes@latest --version
 
 本仓库的 `skill/` 目录是一个完整的 Agent Skill:
 - **Hermes**:复制 `skill/` 到 `~/.hermes/skills/media/` 下(或 `hermes skills import`)
-- **Claude Code**:把 `skill/` 内容合并进项目的 `.claude/skills/`
+- **Claude Code / Codex / 其他**:把 `skill/` 内容合并进对应 skills 目录(如项目的 `.claude/skills/`)
 - 然后对助手说:**"把这篇公众号文章做成三平台视频和封面"**(附链接或全文)
 
 助手会按 `skill/SKILL.md` 的流程自动完成:抓文章 → 提炼 → 设计 → 生成视频 → 生成封面 → 验证 → 归档。
+
+**前置 Skill 依赖**(SKILL.md 会引用,建议一并安装,否则助手会卡在这些引用上):
+
+| Skill | 用途 | 说明 |
+|---|---|---|
+| hyperframes(+ core/animation/cli) | 视频渲染引擎的完整规范 | 核心依赖,详见 `npx hyperframes init` 生成的项目文档 |
+| gzh-explosive-content-detector | 文章被微信验证页拦截时的降级抓取 | 可选:没有就走「让作者粘贴全文」 |
+| mimo-tts | 视频配音(声音克隆,限时免费) | 可选:跳过配音不影响视频/封面产出 |
+
+> 注意:SKILL.md 中 `~/Downloads/Agent/Hermes/` 归档路径是 Hermes 宿主的默认约定,其他宿主请按自己的归档目录习惯调整。
 
 ### 手动使用(不依赖 AI 助手)
 
@@ -128,8 +138,10 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p
 # 6. 封面:复制 skill/references/cover-template.html 为模板,headless Chrome 导出
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --screenshot=cover.png \
   --window-size=1080,1920 --force-device-scale-factor=2 --hide-scrollbars "file://$PWD/cover.html"
-# Windows 用: "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --screenshot=cover.png ...
+# Windows 用: "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --screenshot=cover.png --window-size=1080,1440 --force-device-scale-factor=2 --hide-scrollbars "file://%CD%/cover.html"
 ```
+
+> **Windows 提示**:以上命令中 `python3` 写 `python`、`$PWD` 写 `%CD%`、Chrome 路径用 `C:\Program Files\Google\Chrome\Application\chrome.exe`(装在其他位置就到安装目录找),其余一致。路径含空格时用引号包裹。
 
 ---
 

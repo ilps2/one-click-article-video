@@ -110,8 +110,16 @@ def main():
     total = t_cursor
     print(f"\n✅ 完成: 配音总时长 {sum(durations.values()):.1f}s, 视频建议时长 {total:.1f}s")
     print("时间轴:", json.dumps([(t["id"], t["scene_start"], t["scene_dur"]) for t in timeline], ensure_ascii=False))
-    print(f"\n合成命令示例:\n  ffmpeg -i 视频.mp4 -i {args.out}/s1.mp3 -i {args.out}/s2.mp3 ... "
-          f"-filter_complex \"[1:a]adelay=800|800[a1];[2:a]adelay=<s2延迟>|...\" -map 0:v -map \"[a1]\" ...")
+    # 合成命令(多段 amix,延迟 = scene_start + LEAD 秒 → 毫秒)
+    parts = ";".join(
+        f"[{i + 1}:a]adelay={int((t['scene_start'] + LEAD) * 1000)}:all=1[a{i + 1}]"
+        for i, t in enumerate(timeline)
+    )
+    mix = "".join(f"[a{i + 1}]" for i in range(len(timeline)))
+    print(f"\n合成命令示例:\n  ffmpeg -i 视频.mp4 " + " ".join(
+        f"-i {args.out}/{t['id']}.mp3" for t in timeline) +
+        f" -filter_complex \"{parts};{mix}amix=inputs={len(timeline)}:normalize=0[a]\" "
+        f"-map 0:v -map \"[a]\" -c:v copy -c:a aac -b:a 128k -shortest 输出-配音版.mp4")
 
 
 if __name__ == "__main__":

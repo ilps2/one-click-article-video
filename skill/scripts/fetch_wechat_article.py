@@ -64,6 +64,11 @@ def main():
         print("抓取失败:空响应(可能被风控,请让用户粘贴全文)", file=sys.stderr)
         sys.exit(1)
     title, pub, desc, text = parse(raw)
+    # 明确失败判定:无标题且无正文 = 验证页/链接失效,而不是"成功但内容为空"
+    if not title and not text:
+        print("抓取失败:未解析到 js_content(疑似微信验证页或链接失效)。"
+              "可尝试:① PC UA 重试 ② headless 浏览器 ③ 让用户粘贴全文", file=sys.stderr)
+        sys.exit(1)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(raw)
     print(f"标题: {title}")
